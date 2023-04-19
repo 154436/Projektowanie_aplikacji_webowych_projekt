@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
 from enum import Enum
+from django.conf import settings
 
 # Create your models here.
 class Nauczyciel(models.Model):
@@ -10,6 +11,7 @@ class Nauczyciel(models.Model):
     email = models.CharField(max_length=50)
     haslo = models.TextField(max_length=100)
     nr_telefonu = models.IntegerField()
+    #user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 class Klasa(models.Model):
     id_wychowawcy = models.ForeignKey(Nauczyciel, on_delete=models.CASCADE)
@@ -23,6 +25,7 @@ class Uczen(models.Model):
     email = models.CharField(max_length=50)
     haslo = models.TextField(max_length=100)
     klasa = models.ForeignKey(Klasa, on_delete=models.CASCADE)
+    #user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 class Rodzic(models.Model):
     imie = models.CharField(max_length=50)
@@ -30,6 +33,7 @@ class Rodzic(models.Model):
     email = models.CharField(max_length=50)
     haslo = models.TextField(max_length=100)
     nr_telefonu = models.IntegerField()
+    #user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 class Rodzic_Uczen(models.Model):
     uczen = models.ForeignKey(Uczen, on_delete=models.CASCADE)

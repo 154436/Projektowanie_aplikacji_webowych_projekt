@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Rodzic, Uczen, Rodzic_Uczen, Nauczyciel, Klasa, Klasa_Przedmiot, Ocena, Przedmiot
 
+
 # Register your models here.
 admin.site.register(Rodzic)
 admin.site.register(Uczen)
