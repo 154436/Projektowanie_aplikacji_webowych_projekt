@@ -1,7 +1,4 @@
 from django.db import models
-from django.utils import timezone
-from django.contrib.auth.models import User
-from enum import Enum
 from django.conf import settings
 
 # Create your models here.
@@ -25,6 +22,7 @@ class Uczen(models.Model):
     email = models.CharField(max_length=50,default='test')
     haslo = models.TextField(max_length=100,default='test')
     klasa = models.ForeignKey(Klasa, on_delete=models.CASCADE,default=1)
+    nr_dziennik = models.IntegerField(default=0)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1)
 
 class Rodzic(models.Model):
@@ -34,8 +32,7 @@ class Rodzic(models.Model):
     haslo = models.TextField(max_length=100,default='test')
     nr_telefonu = models.IntegerField(default='1234')
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, default=1)
-    #user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                                #default=User.objects.create_user(username=username, password=haslo))
+
 
 class Rodzic_Uczen(models.Model):
     uczen = models.ForeignKey(Uczen, on_delete=models.CASCADE)
@@ -51,9 +48,8 @@ class Klasa_Przedmiot(models.Model):
     nauczyciel = models.ForeignKey(Nauczyciel, on_delete=models.CASCADE)
 
 class Ocena(models.Model):
-    kat_ocen = Enum('kat_ocen', ['sprawdzian','kartkówka','odpowiedz_ustna','aktywność','zadanie_domowe'])
     stopien = models.IntegerField()
-    #kategoria = models.Choices(kat_ocen)
+    kategoria = models.TextField(max_length=30,default='sprawdzian')
     opis = models.TextField(max_length=300)
     waga = models.IntegerField()
     data = models.DateField()
