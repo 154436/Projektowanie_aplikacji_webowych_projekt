@@ -5,7 +5,9 @@ from .forms import LoginForm
 from django.contrib.auth.decorators import login_required
 from .models import Uczen, Przedmiot, Klasa_Przedmiot, Ocena, Klasa, Nauczyciel, Rodzic, Rodzic_Uczen
 from datetime import datetime
+from django.views.decorators.csrf import csrf_exempt
 
+@csrf_exempt
 def user_login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -31,6 +33,11 @@ def user_login(request):
 def dashboard(request):
     return render(request,'dziennik/dashboard.html',{'section':'dashboard'})
 
+def uczen_pobierz_oceny(request, subject):
+    user = request.user
+    id_student = Uczen.objects.get(user=user)
+    oceny = uczen_pobierz_oceny(id_student.nr_dziennik, id_student.klasa.nazwa, subject)
+    return oceny
 
 def uczen_pobierz_oceny(id_student_class, class_name, subject):
     id_class = Klasa.objects.get(nazwa=class_name)
@@ -49,7 +56,17 @@ def wyswietl_przedmioty_uczen(request):
     user = request.user
     id_student = Uczen.objects.get(user=user)
     subjects = Klasa_Przedmiot.objects.filter(klasa=id_student.klasa)
-    return subjects
+    sub = []
+    oceny = []
+    sub_srednia = []
+    for s in subjects:
+        sub.append(s.przedmiot)
+        o = uczen_pobierz_oceny(id_student.nr_dziennik, id_student.klasa.nazwa, s.przedmiot.nazwa)
+        oceny.append(o)
+        sub_srednia.append(oblicz_srednia_jeden(id_student.nr_dziennik, id_student.klasa.nazwa, s.przedmiot.nazwa))
+    all_sub = zip(sub, oceny, sub_srednia)
+    srednia = oblicz_srednia_wszystkie(id_student.nr_dziennik, id_student.klasa.nazwa)
+    return render(request,'dziennik/subjects/subjects.html',{'uczen': id_student, 'all': all_sub, 'srednia': srednia}) #, 'user': user, 'uczen': id_student.klasa.nazwa})
 
 def wyswietl_przedmioty_nauczyciel(request):
     user = request.user
@@ -97,17 +114,26 @@ def oceny_klasy(class_name, subject):
 def oblicz_srednia_jeden(id_student_class, class_name, subject):
     oceny = uczen_pobierz_oceny(id_student_class, class_name, subject)
     suma = 0
-    for ocena in oceny:
-        suma = suma + int(ocena.stopien)
-    return suma/len(oceny)
+    if len(oceny) > 0:
+        for ocena in oceny:
+            suma = suma + int(ocena.stopien)
+        return suma/len(oceny)
+    return None
 
 def oblicz_srednia_wszystkie(id_student_class, class_name):
     id_class = Klasa.objects.get(nazwa=class_name)
     subjects = Klasa_Przedmiot.objects.filter(klasa=id_class)
     suma = 0
+    licz_przedmiot = 0
     for sub in subjects:
-        suma = suma + oblicz_srednia_jeden(id_student_class, class_name, sub.przedmiot)
-    return suma/len(subjects)
+        wynik = oblicz_srednia_jeden(id_student_class, class_name, sub.przedmiot.nazwa)
+        if wynik != None:
+            suma = suma + wynik
+            licz_przedmiot = licz_przedmiot + 1
+    if licz_przedmiot > 0:
+        return suma/licz_przedmiot
+    else:
+        return None
 
 def oblicz_srednia_klasy(class_name):
     students = pobierz_uczniow(class_name)

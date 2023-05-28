@@ -1,0 +1,31 @@
+{% extends "dziennik/base2.html" %}
+{% block title %}Mój dziennik{% endblock %}
+{% block content %}
+<h1>Mój dziennik
+</h1>
+<p>
+    {{ uczen.imie }} {{uczen.nazwisko}} {{uczen.klasa.nazwa}}
+</br> Średnia = {{srednia}}
+
+</p>
+    {% for sub, oo, sr in all %}
+<h2>
+    {{sub.nazwa}}
+</h2>
+{% if oo|length > 0 %}
+<table>
+    <tr><th>Stopień</th><th>Kategoria</th><th>Opis</th><th>Data</th><th>Waga</th></tr>
+    <tbody>
+{% for o in oo %}
+   <tr><td>{{ o.stopien }}</td><td>{{ o.kategoria }}</td><td>{{ o.opis }}</td><td>{{ o.data }}</td><td>{{ o.waga }}</td></tr>
+{% endfor %}
+
+
+    </tbody>
+</table>
+<p>Średnia z przedmiotu = {{sr}}</p>
+{% else %}
+<p>Nie wystawiono jeszcze żadnych ocen</p>
+{% endif %}
+{% endfor %}
+{% endblock %}

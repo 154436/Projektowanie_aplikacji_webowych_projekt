@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
 
 # Create your models here.
 class Nauczyciel(models.Model):
@@ -41,6 +42,7 @@ class Rodzic_Uczen(models.Model):
 class Przedmiot(models.Model):
     nazwa = models.TextField(max_length=100)
     opis = models.TextField(max_length=300)
+
 
 class Klasa_Przedmiot(models.Model):
     klasa = models.ForeignKey(Klasa, on_delete=models.CASCADE)
