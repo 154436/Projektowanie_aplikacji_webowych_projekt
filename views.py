@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
-from .forms import LoginForm, ClassesForm, AddMarkForm
+from .forms import LoginForm, ClassesForm, AddMarkForm, ChildrenForm
 from django.contrib.auth.decorators import login_required
 from .models import Uczen, Przedmiot, Klasa_Przedmiot, Ocena, Klasa, Nauczyciel, Rodzic, Rodzic_Uczen
 from datetime import datetime
@@ -90,25 +90,42 @@ def wyswietl_przedmioty_uczen(request):
     all_sub = zip(sub, oceny, sub_srednia)
     srednia = oblicz_srednia_wszystkie(id_student.nr_dziennik, id_student.klasa.nazwa)
     return render(request,'dziennik/subjects/subjects.html',{'uczen': id_student, 'all': all_sub, 'srednia': srednia}) #, 'user': user, 'uczen': id_student.klasa.nazwa})
+def wyswietl_przedmioty_uczen(request, nr_dziennika, klasa_nazwa):
+    klasa = Klasa.objects.get(nazwa=klasa_nazwa)
+    id_student = Uczen.objects.get(nr_dziennik=nr_dziennika, klasa=klasa)
+    subjects = Klasa_Przedmiot.objects.filter(klasa=id_student.klasa)
+    sub = []
+    oceny = []
+    sub_srednia = []
+    for s in subjects:
+        sub.append(s.przedmiot)
+        o = uczen_pobierz_oceny(id_student.nr_dziennik, id_student.klasa.nazwa, s.przedmiot.nazwa)
+        oceny.append(o)
+        sub_srednia.append(oblicz_srednia_jeden(id_student.nr_dziennik, id_student.klasa.nazwa, s.przedmiot.nazwa))
+    all_sub = zip(sub, oceny, sub_srednia)
+    srednia = oblicz_srednia_wszystkie(id_student.nr_dziennik, id_student.klasa.nazwa)
+    return render(request,'dziennik/subjects/subjects.html',{'uczen': id_student, 'all': all_sub, 'srednia': srednia})
 @csrf_exempt
 def wyswietl_przedmioty_nauczyciel(request):
     if request.method == 'POST':
-        print(request.POST)
-        form2 = ClassesForm(request.POST)
-        klasa = dict(form2.fields['klasa'].choices)
-        klasa = request.POST['klasa']
-        return oceny_klasy(request, klasa, "Matematyka")
+        kl_sub = request.POST['klasa']
+        l = kl_sub.split(':')
+        sub = l[0]
+        klasa = l[1]
+        return oceny_klasy(request, klasa, sub)
 
     user = request.user
     teacher = Nauczyciel.objects.get(user=user)
     subjects = Klasa_Przedmiot.objects.filter(nauczyciel=teacher)
     sub = []
+    sub_nazwy = []
     kl = []
     for s in subjects:
         sub.append(s.przedmiot)
+        sub_nazwy.append(s.przedmiot.nazwa)
         kl.append(s.klasa.nazwa)
     all = zip(sub, kl)
-    form = ClassesForm(kl)
+    form = ClassesForm(kl,sub_nazwy)
     #form = ChoiceField(choices = klas)
     return render(request,'dziennik/subjects/classes.html',{'nauczyciel': teacher, 'all': all, 'form': form})
 
@@ -118,10 +135,20 @@ def wyswietl_przedmioty_dzieci(id):
     return subjects
 
 def wyswietl_dzieci_rodzica(request):
+    if request.method == 'POST':
+        n_k = request.POST['dziecko']
+        l = n_k.split(':')
+        nr_dziennika = l[0]
+        klasa = l[1]
+        return wyswietl_przedmioty_uczen(request, nr_dziennika, klasa)
     user = request.user
     parent = Rodzic.objects.get(user=user)
     dzieci = Rodzic_Uczen.objects.filter(rodzic=parent)
-    return dzieci.uczen
+    uczniowie = []
+    for d in dzieci:
+        uczniowie.append(d.uczen)
+    form = ChildrenForm(uczniowie)
+    return render(request,'dziennik/subjects/children.html',{'rodzic': parent, 'form': form})
 
 def wstaw_ocene(degree, cat, desc, weight, id_student_class, class_name, subject):
     id_class = Klasa.objects.get(nazwa=class_name)
