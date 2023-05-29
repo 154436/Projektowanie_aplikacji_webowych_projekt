@@ -2,15 +2,23 @@
 <html lang="en">
 <head>
     <title>{% block title %}{% endblock %}</title>
-  <link href="{% static 'css/base.css' %}" rel="stylesheet">
+  <link href="css/base.css" rel="stylesheet">
 </head>
 <body>
+<div id="header">
+    <span class="user">
+        {% if request.user.is_authenticated %}
+        Zalogowany użytkownik: {{request.user.username}}
+        <a href="{% url 'logout' %}">Wyloguj</a>
+        <a href="{% url 'password_change' %}">Zmień hasło</a>
+        {% endif %}
+    </span>
+</div>
 <div id="content">
   {% block content %}
   {% endblock %}
 </div>
 <div id="sidebar">
-  <h2></h2>
 </div>
 </body>
 </html>

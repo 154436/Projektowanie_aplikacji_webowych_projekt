@@ -13,8 +13,6 @@
         {% if request.user.is_authenticated %}
         Zalogowany użytkownik: {{request.user.username}}
         <a href="{% url 'logout' %}">Wyloguj</a>
-        {% else %}
-        <a href="{% url 'login' %}">Zaloguj</a>
         {% endif %}
     </span>
 </div>

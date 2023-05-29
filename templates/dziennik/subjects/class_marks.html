@@ -1,0 +1,30 @@
+{% extends "dziennik/base2.html" %}
+{% block title %}Mój dziennik{% endblock %}
+{% block content %}
+<h1>Mój dziennik
+</h1>
+
+<h2>
+{{klasa}}
+</h2>
+
+<p><a href="add_marks/">Dodaj ocene</a></p>
+
+
+{% for uczen, oo in all %}
+
+<table class="tabela">
+    <tbody>
+    <tr><td>{{uczen.nr_dziennika}}</td><td>{{uczen.imie}} {{uczen.nazwisko}}</td>
+        {% if oo|length > 0 %}
+{% for o in oo %}
+   <td>{{ o.stopien }}</td>
+{% endfor %}
+</tr>
+    </tbody>
+</table>
+
+{% endif %}
+{% endfor %}
+
+{% endblock %}

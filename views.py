@@ -1,11 +1,13 @@
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
-from .forms import LoginForm
+from .forms import LoginForm, ClassesForm, AddMarkForm
 from django.contrib.auth.decorators import login_required
 from .models import Uczen, Przedmiot, Klasa_Przedmiot, Ocena, Klasa, Nauczyciel, Rodzic, Rodzic_Uczen
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
+from django import forms
+from django.forms import ChoiceField
 
 @csrf_exempt
 def user_login(request):
@@ -20,7 +22,8 @@ def user_login(request):
                 if user.is_active:
                     #umieszcza użytkownika w sesji
                     login(request, user)
-                    return HttpResponse('Zalogowano')
+                    return redirect('main/')
+                    #return HttpResponse('Zalogowano')
                 else:
                     return HttpResponse('Konto zablokowane')
             else:
@@ -52,6 +55,26 @@ def pobierz_uczniow(class_name):
     students = Uczen.objects.filter(klasa=id_class)
     return students
 
+def wyznacz_uzytkownika(request):
+    user = request.user
+    try:
+        id_student = Uczen.objects.get(user=user)
+        return wyswietl_przedmioty_uczen(request)
+    except Uczen.DoesNotExist:
+        pass
+    try:
+        id_nauczyciel = Nauczyciel.objects.get(user=user)
+        return wyswietl_przedmioty_nauczyciel(request)
+    except Nauczyciel.DoesNotExist:
+        pass
+    try:
+        parent = Rodzic.objects.get(user=user)
+        return wyswietl_dzieci_rodzica(request)
+    except Rodzic.DoesNotExist:
+        return HttpResponse("Nieprawidlowo utworzony uzytkownik")
+
+
+
 def wyswietl_przedmioty_uczen(request):
     user = request.user
     id_student = Uczen.objects.get(user=user)
@@ -67,12 +90,27 @@ def wyswietl_przedmioty_uczen(request):
     all_sub = zip(sub, oceny, sub_srednia)
     srednia = oblicz_srednia_wszystkie(id_student.nr_dziennik, id_student.klasa.nazwa)
     return render(request,'dziennik/subjects/subjects.html',{'uczen': id_student, 'all': all_sub, 'srednia': srednia}) #, 'user': user, 'uczen': id_student.klasa.nazwa})
-
+@csrf_exempt
 def wyswietl_przedmioty_nauczyciel(request):
+    if request.method == 'POST':
+        print(request.POST)
+        form2 = ClassesForm(request.POST)
+        klasa = dict(form2.fields['klasa'].choices)
+        klasa = request.POST['klasa']
+        return oceny_klasy(request, klasa, "Matematyka")
+
     user = request.user
     teacher = Nauczyciel.objects.get(user=user)
     subjects = Klasa_Przedmiot.objects.filter(nauczyciel=teacher)
-    return subjects
+    sub = []
+    kl = []
+    for s in subjects:
+        sub.append(s.przedmiot)
+        kl.append(s.klasa.nazwa)
+    all = zip(sub, kl)
+    form = ClassesForm(kl)
+    #form = ChoiceField(choices = klas)
+    return render(request,'dziennik/subjects/classes.html',{'nauczyciel': teacher, 'all': all, 'form': form})
 
 def wyswietl_przedmioty_dzieci(id):
     id_student = Uczen.objects.get(id=id)
@@ -94,6 +132,24 @@ def wstaw_ocene(degree, cat, desc, weight, id_student_class, class_name, subject
     new_o = Ocena(stopien=degree, kategoria=cat, opis=desc, waga=weight, data=date, uczen=id_student, przedmiot=id_subject_class)
     new_o.save()
 
+def dodaj_ocene(request):
+    if 'klasa' in request.session:
+        klasa = request.session['klasa']
+    if 'przedmiot' in request.session:
+        przedmiot = request.session['przedmiot']
+    if request.method == 'POST':
+        print(request.POST)
+        stopien = request.POST['stopien']
+        kategoria = request.POST['kategoria']
+        opis = request.POST['opis']
+        waga = request.POST['waga']
+        uczen = request.POST['uczen']
+        wstaw_ocene(stopien,kategoria,opis,waga,uczen,klasa,przedmiot)
+        return HttpResponse("Dodano")
+
+    uczniowie = pobierz_uczniow(klasa)
+    form = AddMarkForm(uczniowie)
+    return render(request, 'dziennik/subjects/add_marks.html', {'form': form})#, {'nauczyciel': teacher, 'all': all,)
 def aktualizuj_ocene(id, degree, cat, desc, weight):
     ocena = Ocena.objects.get(id=id)
     ocena.kategoria = cat
@@ -105,12 +161,15 @@ def aktualizuj_ocene(id, degree, cat, desc, weight):
 def usun_ocene(id):
     ocena = Ocena.objects.get(id=id)
     ocena.delete()
-def oceny_klasy(class_name, subject):
+def oceny_klasy(request, class_name, subject):
     students = pobierz_uczniow(class_name)
+    request.session['klasa'] = class_name
+    request.session['przedmiot'] = subject
     oceny=[]
     for student in students:
         oceny.append(uczen_pobierz_oceny(student.nr_dziennik, class_name, subject))
-    return oceny
+    all = zip(students, oceny)
+    return render(request,'dziennik/subjects/class_marks.html',{'all': all, 'klasa': class_name})
 def oblicz_srednia_jeden(id_student_class, class_name, subject):
     oceny = uczen_pobierz_oceny(id_student_class, class_name, subject)
     suma = 0
