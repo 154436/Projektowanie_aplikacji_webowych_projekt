@@ -7,24 +7,28 @@
 <h2>
 {{klasa}}
 </h2>
+<p>
 
-<p><a href="add_marks/">Dodaj ocene</a></p>
+Średnia klasy = {{srednia_klasy}}</br>
+    <a href="add_marks/">Dodaj ocenę</a>
+</p>
 
-
-{% for uczen, oo in all %}
-
-<table class="tabela">
+<table class="table table-striped table-bordered">
     <tbody>
-    <tr><td>{{uczen.nr_dziennika}}</td><td>{{uczen.imie}} {{uczen.nazwisko}}</td>
+    <tr><th>Nr</th><th>Imię</th><th>Nazwisko</th><th>Oceny</th></tr>
+{% for uczen, oo in all %}
+    <tr><td>{{uczen.nr_dziennik}}.</td><td>{{uczen.imie}} </td><td>{{uczen.nazwisko}}</td>
         {% if oo|length > 0 %}
-{% for o in oo %}
-   <td>{{ o.stopien }}</td>
-{% endfor %}
+<td>{% for o in oo %}
+   {{ o.stopien }}
+{% endfor %}</td>
+        {%else%} brak ocen
 </tr>
-    </tbody>
-</table>
+
 
 {% endif %}
 {% endfor %}
+    </tbody>
+</table>
 
 {% endblock %}

@@ -12,9 +12,11 @@
 
 </h2>
 <form action="." method="post">
+    <div class="form-control">
     {{ form.as_ul }}
     {% csrf_token %}
-    <p><input type="submit" value="Dodaj"></p>
+    <p><input type="submit" value="Dodaj" class="btn btn-primary"></p>
+    </div>
 </form>
 
 {% endblock %}

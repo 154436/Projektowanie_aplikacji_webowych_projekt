@@ -35,6 +35,15 @@ class AddMarkForm(forms.Form):
             self.lista.append((str(l.nr_dziennik),str(l.nr_dziennik)+" " + str(l.imie)+ " " + str(l.nazwisko)))
         self.fields['uczen'].choices = self.lista
 
+class UczniowieForm(forms.Form):
+    ucz = []
+    uczen = forms.ChoiceField()
+    def __init__(self, lista_uczniow):
+         super().__init__()
+         for l in lista_uczniow:
+             self.ucz.append((l,str(l.nr_dziennik)+". " + str(l.imie)+" "+str(l.nazwisko)))
+         self.fields['uczen'].choices = self.ucz
+
 
 
 

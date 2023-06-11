@@ -11,8 +11,10 @@
 <h2>
     Oceny
 </h2>
-{% if oceny|length > 0 %}
-<table>
+{% for sub, oo, sr in all %}
+<h3>{{sub.nazwa}} </h3>
+{% if oo|length > 0 %}
+<table class="table table-striped table-bordered">
     <tr><th>Stopień</th><th>Kategoria</th><th>Opis</th><th>Data</th><th>Waga</th></tr>
     <tbody>
 {% for o in oo %}
@@ -22,8 +24,9 @@
 
     </tbody>
 </table>
+<p>Średnia: {{sr}}</p>
 {% else %}
 <p>Nie wystawiono jeszcze żadnych ocen</p>
 {% endif %}
-
+{% endfor %}
 {% endblock %}

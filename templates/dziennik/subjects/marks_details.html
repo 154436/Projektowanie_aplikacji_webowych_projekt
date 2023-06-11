@@ -4,14 +4,15 @@
 <h1>Mój dziennik
 </h1>
 <p>
-    {{ uczen.imie }} {{uczen.nazwisko}} {{uczen.klasa.nazwa}}
+   {{uczen.nr_dziennik}} {{ uczen.imie }} {{uczen.nazwisko}} {{uczen.klasa.nazwa}}
 </br> Średnia = {{srednia}}
 
 </p>
+    {% for sub, oo, sr in all %}
 <h2>
-    Oceny
+    {{sub.nazwa}}
 </h2>
-{% if oceny|length > 0 %}
+{% if oo|length > 0 %}
 <table>
     <tr><th>Stopień</th><th>Kategoria</th><th>Opis</th><th>Data</th><th>Waga</th></tr>
     <tbody>
@@ -22,8 +23,9 @@
 
     </tbody>
 </table>
+<p>Średnia z przedmiotu = {{sr}}</p>
 {% else %}
 <p>Nie wystawiono jeszcze żadnych ocen</p>
 {% endif %}
-
+{% endfor %}
 {% endblock %}
